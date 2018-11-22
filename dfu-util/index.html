@@ -28,19 +28,15 @@
     
     <ul>
         <li>First, move your "Boot" jumper to the boot position, or hold down the "Boot" button on your CANable pro, then plug in your canable.</li>
-        <li>Next, press "Connect" below</li>
-        <li>Press "Download". You may need to press twice.</li>
+        <li>Next, select the firmware you want to flash and press "Connect and Update" below</li>
     </ul>
     
-    <p> Firmware to Flash: 
+    <p>
         <select id="firmware_path">
             <option value="/builds/slcan-firmware/canable-4f71d65.bin">slcan (latest)</option>
             <option value="/builds/candlelight-firmware/gsusb_canable.bin">candlelight (latest)</option>
         </select>
-    </p>
-    
-    <p>
-        <button id="connect">Connect</button>             <button id="download" disabled="true">Download</button>
+        <button id="connect">Connect and Update</button>
      <span id="status"></span>
     </p>
     

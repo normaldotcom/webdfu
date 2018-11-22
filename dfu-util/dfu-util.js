@@ -221,7 +221,7 @@ var device = null;
     document.addEventListener('DOMContentLoaded', event => {
         let connectButton = document.querySelector("#connect");
         //let detachButton = document.querySelector("#detach");
-        let downloadButton = document.querySelector("#download");
+        //let downloadButton = document.querySelector("#download");
         let uploadButton = document.querySelector("#upload");
         let statusDisplay = document.querySelector("#status");
         let infoDisplay = document.querySelector("#usbInfo");
@@ -289,12 +289,12 @@ var device = null;
                 statusDisplay.textContent = reason;
             }
 
-            connectButton.textContent = "Connect";
+            connectButton.textContent = "Connect and Update";
             infoDisplay.textContent = "";
             dfuDisplay.textContent = "";
             //detachButton.disabled = true;
             //uploadButton.disabled = true;
-            downloadButton.disabled = true;
+            //downloadButton.disabled = true;
             //firmwareFileField.disabled = true;
         }
 
@@ -410,13 +410,13 @@ var device = null;
                 // Runtime
                 //detachButton.disabled = false;
                 //uploadButton.disabled = true;
-                downloadButton.disabled = true;
+                //downloadButton.disabled = true;
                 //firmwareFileField.disabled = true;
             } else {
                 // DFU
                 //detachButton.disabled = true;
                 //uploadButton.disabled = false;
-                downloadButton.disabled = false;
+                //downloadButton.disabled = false;
                 //firmwareFileField.disabled = false;
             }
 
@@ -440,10 +440,97 @@ var device = null;
                 //dfuseStartAddressField.disabled = true;
                 //dfuseUploadSizeField.disabled = true;
             }
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            let firmwarePath = firmwarePathField.options[firmwarePathField.selectedIndex].value;
+
+	    // Download binary file to memory
+            var req = new XMLHttpRequest();
+            req.open('GET', firmwarePath, true);
+    	    req.responseType = "blob";
+            
+	    req.onload = async function(oEvent) {
+
+                let reader = new FileReader();
+                reader.onload = async function() {
+                    firmwareFile = reader.result;
+                    
+                    if (device && firmwareFile != null) {
+                        setLogContext(downloadLog);
+                        clearLog(downloadLog);
+                        try {
+                            let status = await device.getStatus();
+                            if (status.state == dfu.dfuERROR) {
+                                await device.clearStatus();
+                            }
+                        } catch (error) {
+                            device.logWarning("Failed to clear status");
+                        }
+                        await device.do_download(transferSize, firmwareFile, manifestationTolerant).then(
+                            () => {
+                                logInfo("Your CANable has been updated! Return the boot jumper to its normal position, if applicable. Unplug/replug the device to start using the new firmware.");
+                                setLogContext(null);
+                                if (!manifestationTolerant) {
+                                    device.waitDisconnected(5000).then(
+                                        dev => {
+                                            onDisconnect();
+                                            device = null;
+                                        },
+                                        error => {
+                                            // It didn't reset and disconnect for some reason...
+                                            console.log("Device unexpectedly tolerated manifestation.");
+                                        }
+                                    );
+                                }
+                            },
+                            error => {
+                                logError(error);
+                                setLogContext(null);
+                            }
+                        )
+                    }
+                };
+                reader.readAsArrayBuffer(req.response);
+
+            };
+            req.send();
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
 
             return device;
         }
 
+        
+        
+        
+        
+        
+        
+        
         function autoConnect(vid, serial) {
             dfu.findAllDfuInterfaces().then(
                 async dfu_devices => {
@@ -631,6 +718,7 @@ var device = null;
         //    }
         //});
 
+        /*
         downloadButton.addEventListener('click', async function(event) {
             event.preventDefault();
             event.stopPropagation();
@@ -696,6 +784,8 @@ var device = null;
             //return false;
         });
 
+    */
+    
         // Check if WebUSB is available
         if (typeof navigator.usb !== 'undefined') {
             navigator.usb.addEventListener("disconnect", onUnexpectedDisconnect);
