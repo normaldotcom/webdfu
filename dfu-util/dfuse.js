@@ -263,7 +263,7 @@ var dfuse = {};
         }
         this.logInfo(`Wrote ${bytes_sent} bytes`);
 
-        this.logInfo("Manifesting new firmware");
+        //this.logInfo("Manifesting new firmware");
         try {
             await this.dfuseCommand(dfuse.SET_ADDRESS, startAddress, 4);
             await this.download(new ArrayBuffer(), 0);

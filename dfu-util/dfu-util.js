@@ -272,6 +272,8 @@ var device = null;
         //let dfuseStartAddressField = document.querySelector("#dfuseStartAddress");
         //let dfuseUploadSizeField = document.querySelector("#dfuseUploadSize");
 
+        let firmwarePathField = document.querySelector("#firmware_path");
+
         //let firmwareFileField = document.querySelector("#firmwareFile");
         let firmwareFile = null;
 
@@ -327,7 +329,8 @@ var device = null;
             if (desc && Object.keys(desc).length > 0) {
                 device.properties = desc;
                 let info = `WillDetach=${desc.WillDetach}, ManifestationTolerant=${desc.ManifestationTolerant}, CanUpload=${desc.CanUpload}, CanDnload=${desc.CanDnload}, TransferSize=${desc.TransferSize}, DetachTimeOut=${desc.DetachTimeOut}, Version=${hex4(desc.DFUVersion)}`;
-                dfuDisplay.textContent += "\n" + info;
+		// EMZ disabled
+		//dfuDisplay.textContent += "\n" + info;
                 //transferSizeField.value = desc.TransferSize;
                 //transferSize = desc.TransferSize;
 
@@ -392,14 +395,15 @@ var device = null;
             // Display basic USB information
             statusDisplay.textContent = '';
             connectButton.textContent = 'Disconnect';
-            infoDisplay.textContent = (
-                "Name: " + device.device_.productName + "\n" +
-                "MFG: " + device.device_.manufacturerName + "\n" +
-                "Serial: " + device.device_.serialNumber + "\n"
-            );
+            //infoDisplay.textContent = (
+            //    "Name: " + device.device_.productName + "\n" +
+            //    "MFG: " + device.device_.manufacturerName + "\n" +
+            //    "Serial: " + device.device_.serialNumber + "\n"
+            //);
 
             // Display basic dfu-util style info
-            dfuDisplay.textContent = formatDFUSummary(device) + "\n" + memorySummary;
+	    // EMZ disabled this for now
+            //dfuDisplay.textContent = formatDFUSummary(device) + "\n" + memorySummary;
 
             // Update buttons based on capabilities
             if (device.settings.alternate.interfaceProtocol == 0x01) {
@@ -457,7 +461,7 @@ var device = null;
                     }
 
                     if (matching_devices.length == 0) {
-                        statusDisplay.textContent = 'No device found on auto.';
+                        statusDisplay.textContent = 'Please plug in your CANable in boot mode'; // EMZ suppress this message 'No device found on auto.';
                     } else {
                         if (matching_devices.length == 1) {
                             statusDisplay.textContent = 'Connecting...';
@@ -465,7 +469,7 @@ var device = null;
                             console.log(device);
                             device = await connect(device);
                         } else {
-                            statusDisplay.textContent = "Multiple DFU interfaces found.";
+                            statusDisplay.textContent = "Detected CANable device";
                         }
                         //vidField.value = "0x" + hex4(matching_devices[0].device_.vendorId).toUpperCase();
                         vid = matching_devices[0].device_.vendorId;
@@ -635,9 +639,12 @@ var device = null;
             //    return false;
            // }
             
+
+            let firmwarePath = firmwarePathField.options[firmwarePathField.selectedIndex].value;
+
 	    // Download binary file to memory
             var req = new XMLHttpRequest();
-            req.open('GET', "/builds/slcan-firmware/canable-4f71d65.bin", true);
+            req.open('GET', firmwarePath, true);
     	    req.responseType = "blob";
             
 	    req.onload = async function(oEvent) {
@@ -648,7 +655,6 @@ var device = null;
                     
                 };
                     
-                let crap = typeof(firmwareFile);
                 
                 reader.readAsArrayBuffer(req.response);
     
@@ -666,7 +672,7 @@ var device = null;
                     }
                     await device.do_download(transferSize, firmwareFile, manifestationTolerant).then(
                         () => {
-                            logInfo("Done!");
+                            logInfo("Your CANable has been updated! Return the boot jumper to its normal position, if applicable. Unplug/replug the device to start using the new firmware.");
                             setLogContext(null);
                             if (!manifestationTolerant) {
                                 device.waitDisconnected(5000).then(
