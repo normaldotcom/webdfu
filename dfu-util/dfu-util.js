@@ -650,50 +650,46 @@ var device = null;
 	    req.onload = async function(oEvent) {
 
                 let reader = new FileReader();
-                reader.onload = function() {
+                reader.onload = async function() {
                     firmwareFile = reader.result;
                     
-                };
-                    
-                
-                reader.readAsArrayBuffer(req.response);
-    
-                
-                if (device && firmwareFile != null) {
-                    setLogContext(downloadLog);
-                    clearLog(downloadLog);
-                    try {
-                        let status = await device.getStatus();
-                        if (status.state == dfu.dfuERROR) {
-                            await device.clearStatus();
-                        }
-                    } catch (error) {
-                        device.logWarning("Failed to clear status");
-                    }
-                    await device.do_download(transferSize, firmwareFile, manifestationTolerant).then(
-                        () => {
-                            logInfo("Your CANable has been updated! Return the boot jumper to its normal position, if applicable. Unplug/replug the device to start using the new firmware.");
-                            setLogContext(null);
-                            if (!manifestationTolerant) {
-                                device.waitDisconnected(5000).then(
-                                    dev => {
-                                        onDisconnect();
-                                        device = null;
-                                    },
-                                    error => {
-                                        // It didn't reset and disconnect for some reason...
-                                        console.log("Device unexpectedly tolerated manifestation.");
-                                    }
-                                );
+                    if (device && firmwareFile != null) {
+                        setLogContext(downloadLog);
+                        clearLog(downloadLog);
+                        try {
+                            let status = await device.getStatus();
+                            if (status.state == dfu.dfuERROR) {
+                                await device.clearStatus();
                             }
-                        },
-                        error => {
-                            logError(error);
-                            setLogContext(null);
+                        } catch (error) {
+                            device.logWarning("Failed to clear status");
                         }
-                    )
-                }
-                
+                        await device.do_download(transferSize, firmwareFile, manifestationTolerant).then(
+                            () => {
+                                logInfo("Your CANable has been updated! Return the boot jumper to its normal position, if applicable. Unplug/replug the device to start using the new firmware.");
+                                setLogContext(null);
+                                if (!manifestationTolerant) {
+                                    device.waitDisconnected(5000).then(
+                                        dev => {
+                                            onDisconnect();
+                                            device = null;
+                                        },
+                                        error => {
+                                            // It didn't reset and disconnect for some reason...
+                                            console.log("Device unexpectedly tolerated manifestation.");
+                                        }
+                                    );
+                                }
+                            },
+                            error => {
+                                logError(error);
+                                setLogContext(null);
+                            }
+                        )
+                    }
+                };
+                reader.readAsArrayBuffer(req.response);
+
             };
             req.send();
 
