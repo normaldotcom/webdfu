@@ -220,7 +220,7 @@ var device = null;
 
     document.addEventListener('DOMContentLoaded', event => {
         let connectButton = document.querySelector("#connect");
-        let detachButton = document.querySelector("#detach");
+        //let detachButton = document.querySelector("#detach");
         let downloadButton = document.querySelector("#download");
         let uploadButton = document.querySelector("#upload");
         let statusDisplay = document.querySelector("#status");
@@ -272,7 +272,7 @@ var device = null;
         //let dfuseStartAddressField = document.querySelector("#dfuseStartAddress");
         //let dfuseUploadSizeField = document.querySelector("#dfuseUploadSize");
 
-        let firmwareFileField = document.querySelector("#firmwareFile");
+        //let firmwareFileField = document.querySelector("#firmwareFile");
         let firmwareFile = null;
 
         let downloadLog = document.querySelector("#downloadLog");
@@ -290,10 +290,10 @@ var device = null;
             connectButton.textContent = "Connect";
             infoDisplay.textContent = "";
             dfuDisplay.textContent = "";
-            detachButton.disabled = true;
+            //detachButton.disabled = true;
             //uploadButton.disabled = true;
             downloadButton.disabled = true;
-            firmwareFileField.disabled = true;
+            //firmwareFileField.disabled = true;
         }
 
         function onUnexpectedDisconnect(event) {
@@ -404,16 +404,16 @@ var device = null;
             // Update buttons based on capabilities
             if (device.settings.alternate.interfaceProtocol == 0x01) {
                 // Runtime
-                detachButton.disabled = false;
+                //detachButton.disabled = false;
                 //uploadButton.disabled = true;
                 downloadButton.disabled = true;
-                firmwareFileField.disabled = true;
+                //firmwareFileField.disabled = true;
             } else {
                 // DFU
-                detachButton.disabled = true;
+                //detachButton.disabled = true;
                 //uploadButton.disabled = false;
                 downloadButton.disabled = false;
-                firmwareFileField.disabled = false;
+                //firmwareFileField.disabled = false;
             }
 
             if (device.memoryInfo) {
@@ -548,7 +548,7 @@ var device = null;
             }
         });
 
-        detachButton.addEventListener('click', function() {
+/*        detachButton.addEventListener('click', function() {
             if (device) {
                 device.detach().then(
                     async len => {
@@ -576,6 +576,7 @@ var device = null;
                 );
             }
         });
+	*/
 /*
         uploadButton.addEventListener('click', async function(event) {
             event.preventDefault();
@@ -614,25 +615,25 @@ var device = null;
             return false;
         });
 */
-        firmwareFileField.addEventListener("change", function() {
-            firmwareFile = null;
-            if (firmwareFileField.files.length > 0) {
-                let file = firmwareFileField.files[0];
-                let reader = new FileReader();
-                reader.onload = function() {
-                    firmwareFile = reader.result;
-                };
-                reader.readAsArrayBuffer(file);
-            }
-        });
+        //firmwareFileField.addEventListener("change", function() {
+        //    firmwareFile = null;
+        //    if (firmwareFileField.files.length > 0) {
+        //        let file = firmwareFileField.files[0];
+        //        let reader = new FileReader();
+        //        reader.onload = function() {
+        //            firmwareFile = reader.result;
+        //        };
+        //        reader.readAsArrayBuffer(file);
+        //    }
+        //});
 
         downloadButton.addEventListener('click', async function(event) {
             event.preventDefault();
             event.stopPropagation();
-            if (!configForm.checkValidity()) {
-                configForm.reportValidity();
-                return false;
-            }
+            //if (!configForm.checkValidity()) {
+            //    configForm.reportValidity();
+            //    return false;
+           // }
             
 	    // Download binary file to memory
             var req = new XMLHttpRequest();
@@ -702,7 +703,7 @@ var device = null;
                 autoConnect(parseInt("0x0483", 16), serial);
             }
         } else {
-            statusDisplay.textContent = 'WebUSB not available.'
+            statusDisplay.textContent = 'WebUSB not available (you must be running Chrome 61 or later to use this updater)'
             connectButton.disabled = true;
         }
         

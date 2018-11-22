@@ -24,50 +24,29 @@
     </style>
   </head>
   <body>
+    <h1>Update your CANable</h1>
+    
+    <ul>
+        <li><p>First, move your "Boot" jumper to the boot position, or hold down the "Boot" button on your CANable pro, then plug in your canable.</p></li>
+        <li><p>Next, press "Connect" below</p></li>
+    </ul>
+    
     <p>
-      <span id="status"></span>
     </p>
-     <p>
-      <button id="connect">Connect</button>
+    
+    <p>
+        <button id="connect">Connect</button>             <button id="download" disabled="true">Download</button>
+     <span id="status"></span>
     </p>
-    <dialog id="interfaceDialog">
-      Your device has multiple DFU interfaces. Select one from the list below:
-      <form id="interfaceForm" method="dialog">
-        <button id="selectInterface" type="submit">Select interface</button>
-      </form>
-    </dialog>
+    
     <p>
       <div id="usbInfo" style="white-space: pre"></div>
       <div id="dfuInfo" style="white-space: pre"></div>
     </p>
-    <fieldset>
-      <legend>Runtime mode</legend>
-      <button id="detach" disabled="true">Detach DFU</button>
-    </fieldset>
-    <fieldset>
-      <form id="configForm">
-        <legend>DFU mode</legend>
-        <fieldset>
-          <legend>Firmware Download (write to USB device)</legend>
-          <p>
-            <input type="file" id="firmwareFile" name="file" disabled="true"/>
-          </p>
-          <p>
-            <button id="download" disabled="true">Download</button>
-          </p>
-          <div class="log" id="downloadLog"></div>
-        </fieldset>
+    <p>
+              <div class="log" id="downloadLog"></div>
+    </p>
+    
       </form>
-    </fieldset>
-    <h1>Prerequisites</h1>
-    <p>In order to run this demo, you will need:</p>
-    <ul>
-      <li>
-        <p>An up-to-date version of Chrome, at least version 61 or newer</p>
-      </li>
-      <li>
-        <p>A CANable</p>
-      </li>
-    <ul>
   </body>
 </html>
