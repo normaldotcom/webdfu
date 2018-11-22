@@ -18,6 +18,7 @@ var device = null;
         return "0x" + s;
     }
 
+
     function niceSize(n) {
         const gigabyte = 1024 * 1024 * 1024;
         const megabyte = 1024 * 1024;
@@ -32,6 +33,7 @@ var device = null;
             return n + "B";
         }
     }
+
 
     function formatDFUSummary(device) {
         const vid = hex4(device.device_.vendorId);
@@ -448,6 +450,8 @@ var device = null;
                                 matching_devices.push(dfu_device);
                             }
                         } else if (dfu_device.device_.vendorId == vid) {
+
+                            console.log("Found matching VID device: " + vid + " s/n " + dfu_device.device_.serialNumber);
                             matching_devices.push(dfu_device);
                         }
                     }
@@ -463,7 +467,7 @@ var device = null;
                         } else {
                             statusDisplay.textContent = "Multiple DFU interfaces found.";
                         }
-                        vidField.value = "0x" + hex4(matching_devices[0].device_.vendorId).toUpperCase();
+                        //vidField.value = "0x" + hex4(matching_devices[0].device_.vendorId).toUpperCase();
                         vid = matching_devices[0].device_.vendorId;
                     }
                 }
@@ -630,40 +634,61 @@ var device = null;
                 return false;
             }
             
-            if (device && firmwareFile != null) {
-                setLogContext(downloadLog);
-                clearLog(downloadLog);
-                try {
-                    let status = await device.getStatus();
-                    if (status.state == dfu.dfuERROR) {
-                        await device.clearStatus();
-                    }
-                } catch (error) {
-                    device.logWarning("Failed to clear status");
-                }
-                await device.do_download(transferSize, firmwareFile, manifestationTolerant).then(
-                    () => {
-                        logInfo("Done!");
-                        setLogContext(null);
-                        if (!manifestationTolerant) {
-                            device.waitDisconnected(5000).then(
-                                dev => {
-                                    onDisconnect();
-                                    device = null;
-                                },
-                                error => {
-                                    // It didn't reset and disconnect for some reason...
-                                    console.log("Device unexpectedly tolerated manifestation.");
-                                }
-                            );
+	    // Download binary file to memory
+            var req = new XMLHttpRequest();
+            req.open('GET', "/builds/slcan-firmware/canable-4f71d65.bin", true);
+    	    req.responseType = "blob";
+            
+	    req.onload = async function(oEvent) {
+
+                let reader = new FileReader();
+                reader.onload = function() {
+                    firmwareFile = reader.result;
+                    
+                };
+                    
+                let crap = typeof(firmwareFile);
+                
+                reader.readAsArrayBuffer(req.response);
+    
+                
+                if (device && firmwareFile != null) {
+                    setLogContext(downloadLog);
+                    clearLog(downloadLog);
+                    try {
+                        let status = await device.getStatus();
+                        if (status.state == dfu.dfuERROR) {
+                            await device.clearStatus();
                         }
-                    },
-                    error => {
-                        logError(error);
-                        setLogContext(null);
+                    } catch (error) {
+                        device.logWarning("Failed to clear status");
                     }
-                )
-            }
+                    await device.do_download(transferSize, firmwareFile, manifestationTolerant).then(
+                        () => {
+                            logInfo("Done!");
+                            setLogContext(null);
+                            if (!manifestationTolerant) {
+                                device.waitDisconnected(5000).then(
+                                    dev => {
+                                        onDisconnect();
+                                        device = null;
+                                    },
+                                    error => {
+                                        // It didn't reset and disconnect for some reason...
+                                        console.log("Device unexpectedly tolerated manifestation.");
+                                    }
+                                );
+                            }
+                        },
+                        error => {
+                            logError(error);
+                            setLogContext(null);
+                        }
+                    )
+                }
+                
+            };
+            req.send();
 
             //return false;
         });
@@ -673,11 +698,15 @@ var device = null;
             navigator.usb.addEventListener("disconnect", onUnexpectedDisconnect);
             // Try connecting automatically
             if (fromLandingPage) {
-                autoConnect(vid, serial);
+                //autoConnect(vid, serial);
+                autoConnect(parseInt("0x0483", 16), serial);
             }
         } else {
             statusDisplay.textContent = 'WebUSB not available.'
             connectButton.disabled = true;
         }
+        
+    
+        
     });
 })();
