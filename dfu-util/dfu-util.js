@@ -231,21 +231,21 @@ var device = null;
 
         let searchParams = new URLSearchParams(window.location.search);
         let fromLandingPage = false;
+
+        // Hardcode vendor ID to ST
         let vid = 0;
-        // Set the vendor ID from the landing page URL
-        if (searchParams.has("vid")) {
-            const vidString = searchParams.get("vid");
-            try {
-                if (vidString.toLowerCase().startsWith("0x")) {
-                    vid = parseInt(vidString, 16);
-                } else {
-                    vid = parseInt(vidString, 10);
-                }
-                vidField.value = "0x" + hex4(vid).toUpperCase();
-                fromLandingPage = true;
-            } catch (error) {
-                console.log("Bad VID " + vidString + ":" + error);
+
+        let vidString = "0x0483"
+        try {
+            if (vidString.toLowerCase().startsWith("0x")) {
+                vid = parseInt(vidString, 16);
+            } else {
+                vid = parseInt(vidString, 10);
             }
+            //vidField.value = "0x" + hex4(vid).toUpperCase();
+            fromLandingPage = true;
+        } catch (error) {
+            console.log("Bad VID " + vidString + ":" + error);
         }
 
         // Grab the serial number from the landing page
@@ -261,11 +261,14 @@ var device = null;
 
         let configForm = document.querySelector("#configForm");
 
-        let transferSizeField = document.querySelector("#transferSize");
-        let transferSize = parseInt(transferSizeField.value);
+        //let transferSizeField = document.querySelector("#transferSize");
+        //let transferSize = parseInt(transferSizeField.value);
+        let transferSize = 2048;
+        let startAddress = 0x8000000;
+        let maxUploadSize = 0; // overwritten by device.memoryInfo which reads flash size
 
-        let dfuseStartAddressField = document.querySelector("#dfuseStartAddress");
-        let dfuseUploadSizeField = document.querySelector("#dfuseUploadSize");
+        //let dfuseStartAddressField = document.querySelector("#dfuseStartAddress");
+        //let dfuseUploadSizeField = document.querySelector("#dfuseUploadSize");
 
         let firmwareFileField = document.querySelector("#firmwareFile");
         let firmwareFile = null;
@@ -286,7 +289,7 @@ var device = null;
             infoDisplay.textContent = "";
             dfuDisplay.textContent = "";
             detachButton.disabled = true;
-            uploadButton.disabled = true;
+            //uploadButton.disabled = true;
             downloadButton.disabled = true;
             firmwareFileField.disabled = true;
         }
@@ -323,8 +326,12 @@ var device = null;
                 device.properties = desc;
                 let info = `WillDetach=${desc.WillDetach}, ManifestationTolerant=${desc.ManifestationTolerant}, CanUpload=${desc.CanUpload}, CanDnload=${desc.CanDnload}, TransferSize=${desc.TransferSize}, DetachTimeOut=${desc.DetachTimeOut}, Version=${hex4(desc.DFUVersion)}`;
                 dfuDisplay.textContent += "\n" + info;
-                transferSizeField.value = desc.TransferSize;
-                transferSize = desc.TransferSize;
+                //transferSizeField.value = desc.TransferSize;
+                //transferSize = desc.TransferSize;
+
+                // emz hardcode start address
+                device.startAddress = parseInt(startAddress, 16);
+
                 if (desc.CanDnload) {
                     manifestationTolerant = desc.ManifestationTolerant;
                 }
@@ -396,35 +403,36 @@ var device = null;
             if (device.settings.alternate.interfaceProtocol == 0x01) {
                 // Runtime
                 detachButton.disabled = false;
-                uploadButton.disabled = true;
+                //uploadButton.disabled = true;
                 downloadButton.disabled = true;
                 firmwareFileField.disabled = true;
             } else {
                 // DFU
                 detachButton.disabled = true;
-                uploadButton.disabled = false;
+                //uploadButton.disabled = false;
                 downloadButton.disabled = false;
                 firmwareFileField.disabled = false;
             }
 
             if (device.memoryInfo) {
-                let dfuseFieldsDiv = document.querySelector("#dfuseFields")
-                dfuseFieldsDiv.hidden = false;
-                dfuseStartAddressField.disabled = false;
-                dfuseUploadSizeField.disabled = false;
+                //let dfuseFieldsDiv = document.querySelector("#dfuseFields")
+                //dfuseFieldsDiv.hidden = false;
+                //dfuseStartAddressField.disabled = false;
+                //dfuseUploadSizeField.disabled = false;
                 let segment = device.getFirstWritableSegment();
                 if (segment) {
                     device.startAddress = segment.start;
-                    dfuseStartAddressField.value = "0x" + segment.start.toString(16);
+                    //dfuseStartAddressField.value = "0x" + segment.start.toString(16);
                     const maxReadSize = device.getMaxReadSize(segment.start);
-                    dfuseUploadSizeField.value = maxReadSize;
-                    dfuseUploadSizeField.max = maxReadSize;
+                    //dfuseUploadSizeField.value = maxReadSize;
+                    //dfuseUploadSizeField.max = maxReadSize;
+                    maxUploadSize = maxReadSize
                 }
             } else {
-                let dfuseFieldsDiv = document.querySelector("#dfuseFields")
-                dfuseFieldsDiv.hidden = true;
-                dfuseStartAddressField.disabled = true;
-                dfuseUploadSizeField.disabled = true;
+                //let dfuseFieldsDiv = document.querySelector("#dfuseFields")
+                //dfuseFieldsDiv.hidden = true;
+                //dfuseStartAddressField.disabled = true;
+                //dfuseUploadSizeField.disabled = true;
             }
 
             return device;
@@ -445,7 +453,7 @@ var device = null;
                     }
 
                     if (matching_devices.length == 0) {
-                        statusDisplay.textContent = 'No device found.';
+                        statusDisplay.textContent = 'No device found on auto.';
                     } else {
                         if (matching_devices.length == 1) {
                             statusDisplay.textContent = 'Connecting...';
@@ -462,31 +470,31 @@ var device = null;
             );
         }
 
-        vidField.addEventListener("change", function() {
-            vid = parseInt(vidField.value, 16);
-        });
+        //vidField.addEventListener("change", function() {
+        //    vid = parseInt(vidField.value, 16);
+        //});
 
-        transferSizeField.addEventListener("change", function() {
-            transferSize = parseInt(transferSizeField.value);
-        });
+        //transferSizeField.addEventListener("change", function() {
+        //    transferSize = parseInt(transferSizeField.value);
+        //});
 
-        dfuseStartAddressField.addEventListener("change", function(event) {
-            const field = event.target;
-            let address = parseInt(field.value, 16);
-            if (isNaN(address)) {
-                field.setCustomValidity("Invalid hexadecimal start address");
-            } else if (device && device.memoryInfo) {
-                if (device.getSegment(address) !== null) {
-                    device.startAddress = address;
-                    field.setCustomValidity("");
-                    dfuseUploadSizeField.max = device.getMaxReadSize(address);
-                } else {
-                    field.setCustomValidity("Address outside of memory map");
-                }
-            } else {
-                field.setCustomValidity("");
-            }
-        });
+        //dfuseStartAddressField.addEventListener("change", function(event) {
+        //    const field = event.target;
+        //    let address = parseInt(field.value, 16);
+        //    if (isNaN(address)) {
+        //        field.setCustomValidity("Invalid hexadecimal start address");
+        //    } else if (device && device.memoryInfo) {
+        //        if (device.getSegment(address) !== null) {
+        //            device.startAddress = address;
+        //            field.setCustomValidity("");
+        //            dfuseUploadSizeField.max = device.getMaxReadSize(address);
+        //        } else {
+        //            field.setCustomValidity("Address outside of memory map");
+        //        }
+        //    } else {
+        //        field.setCustomValidity("");
+        //    }
+        //});
 
         connectButton.addEventListener('click', function() {
             if (device) {
@@ -510,7 +518,10 @@ var device = null;
                             device = await connect(new dfu.Device(selectedDevice, interfaces[0]));
                         } else {
                             await fixInterfaceNames(selectedDevice, interfaces);
-                            populateInterfaceList(interfaceForm, selectedDevice, interfaces);
+
+                            // Choose the first endpoint (alt=0) which should be flash
+                            device = await connect(new dfu.Device(selectedDevice, interfaces[0]));
+                            /* populateInterfaceList(interfaceForm, selectedDevice, interfaces);
                             async function connectToSelectedInterface() {
                                 interfaceForm.removeEventListener('submit', this);
                                 const index = interfaceForm.elements["interfaceIndex"].value;
@@ -524,7 +535,7 @@ var device = null;
                                 interfaceForm.removeEventListener('submit', connectToSelectedInterface);
                             });
 
-                            interfaceDialog.showModal();
+                            interfaceDialog.showModal(); */
                         }
                     }
                 ).catch(error => {
@@ -561,7 +572,7 @@ var device = null;
                 );
             }
         });
-
+/*
         uploadButton.addEventListener('click', async function(event) {
             event.preventDefault();
             event.stopPropagation();
@@ -585,13 +596,9 @@ var device = null;
                     device.logWarning("Failed to clear status");
                 }
 
-                let maxSize = Infinity;
-                if (!dfuseUploadSizeField.disabled) {
-                    maxSize = parseInt(dfuseUploadSizeField.value);
-                }
 
                 try {
-                    const blob = await device.do_upload(transferSize, maxSize);
+                    const blob = await device.do_upload(transferSize, maxUploadSize);
                     saveAs(blob, "firmware.bin");
                 } catch (error) {
                     logError(error);
@@ -602,7 +609,7 @@ var device = null;
 
             return false;
         });
-
+*/
         firmwareFileField.addEventListener("change", function() {
             firmwareFile = null;
             if (firmwareFileField.files.length > 0) {
